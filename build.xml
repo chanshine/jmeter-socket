@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+
+<project name="ant-jmeter-test" default="all">
+
+    <tstamp>  
+        <format property="time" pattern="yyyyMMddhhmm" />  
+    </tstamp>
+    <!--jmeter 路径-->
+    <property name="jmeter.home" value="/Users/chenxin/apache-jmeter-3.1" />
+
+    <!-- jmeter生成jtl格式的结果报告的路径-->   
+    <property name="jmeter.result.jtl.dir" value="/Users/chenxin/Desktop/JMX/JmeReport/jtl" />
+
+    <!-- jmeter生成html格式的结果报告的路径-->   
+    <property name="jmeter.result.html.dir" value="/Users/chenxin/Desktop/JMX/JmeReport/html" />
+
+    <!-- jmeter生成html格式的结果报告的前缀-->
+    <property name="ReportName" value="TestReport" />
+    <property name="jmeter.result.jtlName" value="${jmeter.result.jtl.dir}/${ReportName}${time}.jtl" />  
+    <property name="jmeter.result.htmlName" value="${jmeter.result.html.dir}/${ReportName}${time}.html" />
+
+    <!--处理报告中出现NaN--> 
+    <path id="xslt.classpath">
+        <fileset dir="${jmeter.home}/lib" includes="xalan*.jar"/>
+        <fileset dir="${jmeter.home}/lib" includes="serializer*.jar"/>
+    </path>
+
+
+    <target name="all">  
+        <antcall target="test" />  
+        <antcall target="report" />  
+    </target>
+
+
+    <target name="test">  
+        <taskdef name="jmeter" classname="org.programmerplanet.ant.taskdefs.jmeter.JMeterTask" />  
+        <jmeter jmeterhome="${jmeter.home}" resultlog="${jmeter.result.jtlName}">  
+            <!-- 声明要运行的脚本。"*.jmx"指包含此目录下的所有jmeter脚本-->  
+            <testplans dir="/Users/chenxin/Desktop/JMX" includes="*.jmx" />
+            
+            <!--解决报错：Error! 前言中不允许有内容--> 
+            <!--因为不加上这一句，生成的.jtl文件是文本文件不是xml文件，使用xsl去转换.jtl文件时就会报错--> 
+            <property name="jmeter.save.saveservice.output_format" value="xml"/>  
+        </jmeter>  
+    </target>
+
+    <target name="report">  
+        <xslt in="${jmeter.result.jtlName}"  
+              out="${jmeter.result.htmlName}"  
+              style="${jmeter.home}/extras/jmeter-results-detail-report_21.xsl" />  
+          
+        <!-- 因为上面生成报告的时候，不会将相关的图片也一起拷贝至目标目录，所以，需要手动拷贝 -->  
+        <copy todir="${jmeter.result.html.dir}">  
+            <fileset dir="${jmeter.home}/extras">  
+                <include name="collapse.png" />  
+                <include name="expand.png" />  
+            </fileset>  
+        </copy>  
+    </target>
+    
+</project>
